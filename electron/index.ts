@@ -4,6 +4,8 @@ import { join } from 'path';
 // Packages
 import { BrowserWindow, app, ipcMain, IpcMainEvent } from 'electron';
 import isDev from 'electron-is-dev';
+import childProcess from 'child_process';
+import * as fs from 'fs';
 
 const height = 600;
 const width = 800;
@@ -14,7 +16,7 @@ function createWindow() {
     width,
     height,
     //  change to false to use AppBar
-    frame: false,
+    frame: true,
     show: true,
     resizable: true,
     fullscreenable: true,
@@ -62,6 +64,35 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  // 唤起python
+
+  const exeName = process.platform === 'win32' ? 'pyapp.exe' : 'pyapp';
+  // 在这里添加启动外部程序的代码
+  const exeDir = isDev ? 'python/dist/' : 'resources/python/dist/';
+  console.log(exeDir);
+  // const exePath = path.join(__dirname, 'path-to-your-exe', 'your-exe-file.exe');
+  const args: readonly string[] | undefined = []; // 这里可以传递给外部程序的命令行参数
+  const options = {
+    cwd: exeDir, // 可选: 工作目录
+    env: process.env // 可选: 环境变量
+  };
+  if (false) {
+    // 是否内嵌Python进程，默认为true，即在electron进程中启动python子进程。非内嵌模式是独立启动python进程
+    const subprocess = childProcess.spawn(exeName, args, options);
+    console.info('start python success....');
+    subprocess.stdout.on('data', (data) => {
+      console.info(`stdout: ${data}`);
+    });
+
+    subprocess.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
+
+    subprocess.on('close', (code) => {
+      console.info(`child process exited with code ${code}`);
+    });
+  }
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -78,4 +109,16 @@ app.on('window-all-closed', () => {
 ipcMain.on('message', (event: IpcMainEvent, message: any) => {
   console.log(message);
   setTimeout(() => event.sender.send('message', 'hi from electron'), 500);
+});
+
+ipcMain.on('write-file', (event: IpcMainEvent, data: Uint8Array) => {
+  console.log('我被调用 了');
+  fs.writeFile('D://wav/output.wav', data, (err) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('File written successfully!');
+    }
+  });
+  event.sender.send('write-file', 'hi from electron');
 });

@@ -1,0 +1,4 @@
+asyncio
+websockets
+cx_Freeze
+flask

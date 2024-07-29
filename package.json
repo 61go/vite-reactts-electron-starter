@@ -24,6 +24,7 @@
     "build": "npm run build:vite && npm run build:electron",
     "build:vite": "vite build",
     "build:electron": "tsc -p electron",
+    "build:python": "cd python && rimraf ./dist&& python ./setup.py build",
     "dist": "npm run build && electron-builder",
     "pack": "npm run build && electron-builder --dir",
     "clean": "rimraf dist main src/out",
@@ -64,7 +65,9 @@
     "asar": true,
     "files": [
       "main",
-      "src/out"
+      "src/out",
+      "python/dist/**/*"
+
     ],
     "directories": {
       "buildResources": "resources"
